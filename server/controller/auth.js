@@ -5,7 +5,8 @@ const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config/keys");
 const auditLogger = require("../utils/auditlogger");
 
-const MAX_FAILED_ATTEMPTS = 3; // Maximum allowed failed attempts
+// List of common passwords to be avoided
+const commonPasswords = ["123456", "password"];
 class Auth {
   async isAdmin(req, res) {
     let { loggedInUserId } = req.body;
@@ -44,6 +45,12 @@ class Auth {
       error = { ...error, name: "Name must be 3-25 charecter" };
       return res.json({ error });
     } else {
+       // Check if the password is in the list of common passwords
+  if (commonPasswords.includes(password)) {
+    error = { ...error, password: "Password is too common. Please choose a stronger password" };
+      return res.json({ error });
+  
+  }  
       if (validateEmail(email)) {
         name = toTitleCase(name);
         if ((password.length > 12) | (password.length < 8)) {
