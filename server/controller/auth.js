@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const userModel = require("../models/users");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config/keys");
-
+const auditLogger = require("../utils/auditlogger");
 class Auth {
   async isAdmin(req, res) {
     let { loggedInUserId } = req.body;
@@ -82,6 +82,7 @@ class Auth {
                 .catch((err) => {
                   console.log(err);
                 });
+                auditLogger(newUser._id, email,  "registered");
             }
           } catch (err) {
             console.log(err);
@@ -120,6 +121,7 @@ class Auth {
             { _id: data._id, role: data.userRole },
             JWT_SECRET
           );
+          auditLogger(data._id, email, "logged in");
           const encode = jwt.verify(token, JWT_SECRET);
           return res.json({
             token: token,
