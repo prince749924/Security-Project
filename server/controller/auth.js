@@ -4,6 +4,8 @@ const userModel = require("../models/users");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config/keys");
 const auditLogger = require("../utils/auditlogger");
+
+const MAX_FAILED_ATTEMPTS = 3; // Maximum allowed failed attempts
 class Auth {
   async isAdmin(req, res) {
     let { loggedInUserId } = req.body;
@@ -44,10 +46,10 @@ class Auth {
     } else {
       if (validateEmail(email)) {
         name = toTitleCase(name);
-        if ((password.length > 255) | (password.length < 8)) {
+        if ((password.length > 12) | (password.length < 8)) {
           error = {
             ...error,
-            password: "Password must be 8 charecter",
+            password: "Password must be 8-12 charecter",
             name: "",
             email: "",
           };
@@ -116,6 +118,7 @@ class Auth {
         });
       } else {
         const login = await bcrypt.compare(password, data.password);
+        
         if (login) {
           const token = jwt.sign(
             { _id: data._id, role: data.userRole },
